@@ -22,6 +22,8 @@ myr2 = pygame.mixer.Sound("мур2.mp3")
 myr3 = pygame.mixer.Sound("мур3.mp3")
 spis_myr = [myr1, myr2, myr3]
 
+proval = pygame.mixer.Sound("ахах.mp3")
+
 pw = 60
 ph = 100
 x = wight_disp // 3
@@ -78,7 +80,7 @@ kot3 = pygame.transform.flip(kot3, True, False)
 kot4 = load_image("кот4.PNG", -1)
 kot4 = pygame.transform.flip(kot4, True, False)
 
-spis_kot = [kot1, kot2, kot3, kot4]
+spis_kot1 = [kot1, kot2, kot3, kot4]
 
 kot12 = load_image("ток1.PNG", -1)
 kot12 = pygame.transform.flip(kot12, True, False)
@@ -94,6 +96,8 @@ fish = pygame.transform.flip(fish, True, False)
 fish = pygame.transform.scale(fish, (50, 50))
 
 spis_kot2 = [kot12, kot22, kot32, kot42]
+
+spis_kot = spis_kot1
 pause = False
 kill_xp = False
 
@@ -104,6 +108,10 @@ xp_image = pygame.transform.scale(xp_image, (50, 50))
 shet = 1
 game_over = load_image("game_over.jpg")
 game_over = pygame.transform.scale(game_over, (1280, 920))
+
+menu = load_image("менюшка.jpg")
+menu = pygame.transform.scale(menu, (1280, 920))
+
 
 class Pregrada:
     def __init__(self, x, y, wight, height, image, speed, flag):
@@ -158,7 +166,8 @@ class Pregrada:
 
     def proverka(self):
         global x, y, wx, hy
-        if (x + wx > self.x and x + wx < self.x + 50) and y + hy > self.y or (x > self.x and x < self.x + 50 and y + hy > self.y ):
+        if (x + wx > self.x and x + wx < self.x + 50) and y + hy >\
+                self.y or (x > self.x and x < self.x + 50 and y + hy > self.y):
             return True
 
 
@@ -177,10 +186,63 @@ def app():
     spis_p = []
 
 
+def menu_start():
+    global xp, spis_kot
+    spis = []
+    rez = open("rez.txt", "r")
+    rezult = rez.readlines()
+    for i in rezult:
+        i.strip("\n")
+        spis.append(int(i))
+    while True:
+        display.blit(menu, (0, 0))
+        if spis_kot == spis_kot2:
+            pygame.draw.rect(display, (0, 255, 0), (915, 100, 130, 120), 5)
+        else:
+            pygame.draw.rect(display, (0, 255, 0), (1115, 100, 130, 120), 5)
+        print_text(f"Твои лучшие результаты", 10, 500, (100, 100, 255),
+                   fonte="bebas_neue_book.ttf",
+                   font_size=40)
+        xp = 9
+        display.blit(kot3, (1115, 100))
+        display.blit(kot32, (915, 100))
+        display.blit(fish, (15, 15))
+        print_text(f"Нажмите Enter что бы начать игру", 255, 290, (255, 100, 100),
+                   fonte="bebas_neue_book.ttf",
+                   font_size=70)
+        for index, lyhii_rez in enumerate(sorted(spis)[::-1]):
+            if index < 5:
+                print_text(f"{lyhii_rez}", 110, 550 + index * 50, (100, 100, 255),
+                           fonte="bebas_neue_book.ttf",
+                           font_size=40)
+        pygame.display.flip()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.pos[0] > 915 and event.pos[0] < 915 + 130 \
+                        and event.pos[1] > 100 and event.pos[1] < 100 + 120:
+                    spis_kot = spis_kot2
+                    pygame.draw.rect(display, (0, 255, 0), (915, 100, 130, 120), 5)
+                elif event.pos[0] > 1115 and event.pos[0] < 1115 + 130 \
+                        and event.pos[1] > 100 and event.pos[1] < 100 + 120:
+                    spis_kot = spis_kot1
+                    pygame.draw.rect(display, (0, 255, 0), (1115, 100, 130, 120), 5)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    run_game()
+                    break
+
+
 def run_game():
+    global jump, x, y, pause, kill_xp, ocki, speed, xp, shet, spis_myr
+    x = wight_disp // 3
+    y = height_disp - ph - 100
+    rez = open("rez.txt", "a")
     pygame.mixer.music.play(-1)
     count = 0
-    global jump, x, y, pause, kill_xp, ocki, speed, xp, shet, spis_myr
+    ocki = 0
     game = True
     fon = load_image("фон2.png")
     fon1 = pygame.transform.scale(fon, (1280, 820))
@@ -272,10 +334,27 @@ def run_game():
             if vrema > 40 / shet:
                 xp -= 1
                 if xp < 1:
-                    xp = 0
-                    display.blit(game_over, (0, 0))
+                    rez.write(f"\n{ocki}")
+                    rez.close()
+                    pygame.mixer.Sound.play(proval)
+                    display.blit(game_over, (0, -70))
+                    print_text(f"Ваш результат {ocki}", 440, 520, (255, 100, 100), fonte="bebas_neue_book.ttf",
+                               font_size=70)
+                    print_text(f"Нажмите Enter что бы выйти в меню", 265, 590, (255, 100, 100),
+                               fonte="bebas_neue_book.ttf",
+                               font_size=70)
+                    pygame.mixer.music.stop()
                     pygame.display.flip()
-                    pause = True
+                    while game:
+                        for event2 in pygame.event.get():
+                            if event2.type == pygame.QUIT:
+                                pygame.quit()
+                                quit()
+                            if event2.type == pygame.KEYDOWN:
+                                if event2.key == pygame.K_RETURN:
+                                    pygame.mixer.Sound.stop(proval)
+                                    menu_start()
+                                    break
                 kill_xp = False
         if vrema > 20 / shet:
             if random.randint(1, 60) == 1:
@@ -328,4 +407,4 @@ def print_text(texte, x, y, color = (0, 0, 0), fonte = "bebas_neue_book.ttf", fo
     display.blit(text, (x, y))
 
 
-run_game()
+menu_start()
